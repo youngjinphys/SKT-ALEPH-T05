@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; connect-src 'none'">
+  <meta name="description" content="이미지와 문구를 조합해 밈, 카드, SNS 이미지를 브라우저에서 만드는 공개 편집기">
+  <title>이미지 문구 편집기</title>
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>이미지 문구 편집기</h1>
+      <p>이미지는 서버로 전송하지 않고 이 브라우저에서만 처리합니다.</p>
+    </div>
+    <label class="button button-secondary file-button">
+      이미지 선택
+      <input id="file-input" type="file" accept=".png,.jpeg" aria-describedby="file-help">
+    </label>
+  </header>
+
+  <main class="app-main">
+    <section id="empty-state" class="empty-state" aria-labelledby="empty-title">
+      <div id="drop-zone" class="drop-zone">
+        <div class="upload-symbol" aria-hidden="true">＋</div>
+        <h2 id="empty-title">이미지를 불러오세요</h2>
+        <p id="file-help">PNG(.png) 또는 JPEG(.jpeg), 최대 30MB · 3,200만 픽셀</p>
+        <p class="file-warning"><strong>.jpg는 지원하지 않습니다.</strong></p>
+        <label for="file-input" class="button button-primary file-button">파일 선택</label>
+        <p class="drop-hint">또는 파일을 이 영역에 드래그하세요.</p>
+      </div>
+    </section>
+
+    <section id="editor-shell" class="editor-shell" hidden>
+      <div class="workspace-column">
+        <nav class="toolbar" aria-label="편집 도구">
+          <div class="toolbar-group" aria-label="비율 선택">
+            <span class="toolbar-label">비율</span>
+            <button type="button" class="segmented" data-ratio="1:1" aria-pressed="true">1:1</button>
+            <button type="button" class="segmented" data-ratio="4:5" aria-pressed="false">4:5</button>
+            <button type="button" class="segmented" data-ratio="9:16" aria-pressed="false">9:16</button>
+          </div>
+          <div class="toolbar-group">
+            <button id="undo" type="button" class="icon-button" aria-label="실행 취소" title="실행 취소 (Ctrl/Cmd+Z)">↶</button>
+            <button id="redo" type="button" class="icon-button" aria-label="다시 실행" title="다시 실행 (Ctrl/Cmd+Shift+Z)">↷</button>
+          </div>
+          <div class="toolbar-group toolbar-actions">
+            <button id="crop-mode" type="button" class="button button-secondary" aria-pressed="false">사진 위치 조정</button>
+            <button id="add-text" type="button" class="button button-primary">+ 문구 추가</button>
+          </div>
+        </nav>
+
+        <div class="canvas-area">
+          <div id="canvas-wrap" class="canvas-wrap">
+            <canvas id="editor-canvas" aria-label="이미지 편집 캔버스" tabindex="0"></canvas>
+            <textarea id="inline-text-editor" class="inline-text-editor" aria-label="캔버스 문구 직접 편집" hidden></textarea>
+          </div>
+        </div>
+        <div class="canvas-footer">
+          <span id="output-size">1080 × 1080 px 출력</span>
+          <span>문구: 클릭·드래그 / 더블클릭 편집 / 모서리 핸들 크기 조절</span>
+        </div>
+      </div>
+
+      <aside class="inspector" aria-label="편집 속성">
+        <section class="panel-section">
+          <h2>사진</h2>
+          <label class="field-row" for="image-zoom">
+            <span>확대</span>
+            <input id="image-zoom" type="range" min="1" max="3" step="0.01" value="1">
+          </label>
+          <button id="reset-crop" type="button" class="button button-secondary full-width">사진 위치 초기화</button>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading-row">
+            <h2>문구 레이어</h2>
+            <button id="add-text-side" type="button" class="text-button">추가</button>
+          </div>
+          <div id="layers-list" class="layers-list" aria-label="문구 레이어 목록"></div>
+          <p class="panel-hint">화살표 키로 1px, Shift+화살표로 10px 이동할 수 있습니다.</p>
+        </section>
+
+        <section id="text-inspector" class="panel-section" hidden>
+          <h2>선택한 문구</h2>
+          <label class="field-stack" for="text-content">
+            <span>내용</span>
+            <textarea id="text-content" rows="4"></textarea>
+          </label>
+          <div class="two-column-fields">
+            <label class="field-stack" for="text-color">
+              <span>색상</span>
+              <input id="text-color" type="color" value="#ffffff">
+            </label>
+            <label class="field-stack" for="text-size">
+              <span>크기</span>
+              <input id="text-size" type="number" min="16" max="270" step="1" value="70">
+            </label>
+          </div>
+          <label class="field-stack" for="text-font">
+            <span>글꼴</span>
+            <select id="text-font">
+              <option value='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' selected>기본 고딕</option>
+              <option value="serif">명조 / Serif</option>
+              <option value="monospace">고정폭 / Monospace</option>
+            </select>
+          </label>
+          <div class="two-column-fields">
+            <label class="field-stack" for="text-weight">
+              <span>굵기</span>
+              <select id="text-weight">
+                <option value="400">보통</option>
+                <option value="600">중간</option>
+                <option value="700" selected>굵게</option>
+                <option value="800">매우 굵게</option>
+              </select>
+            </label>
+            <label class="field-stack" for="text-align">
+              <span>정렬</span>
+              <select id="text-align">
+                <option value="left">왼쪽</option>
+                <option value="center" selected>가운데</option>
+                <option value="right">오른쪽</option>
+              </select>
+            </label>
+          </div>
+          <button id="delete-text" type="button" class="button button-danger full-width">문구 삭제</button>
+        </section>
+
+        <section class="panel-section export-section">
+          <h2>내보내기</h2>
+          <label class="field-stack" for="export-format">
+            <span>파일 형식</span>
+            <select id="export-format">
+              <option value="png" selected>PNG</option>
+              <option value="jpeg">JPEG (.jpeg)</option>
+            </select>
+          </label>
+          <label id="jpeg-quality-row" class="field-stack" for="jpeg-quality" hidden>
+            <span>JPEG 품질</span>
+            <input id="jpeg-quality" type="range" min="0.6" max="1" step="0.01" value="0.92">
+          </label>
+          <button id="export-image" type="button" class="button button-primary full-width">이미지 내려받기</button>
+          <p class="panel-hint">결과 파일은 새로 인코딩되어 원본 EXIF 메타데이터를 복사하지 않습니다.</p>
+        </section>
+      </aside>
+    </section>
+
+    <div class="message-stack" aria-live="polite" aria-atomic="true">
+      <p id="error-message" class="message error-message" role="alert" hidden></p>
+      <p id="status-message" class="message status-message">PNG(.png) 또는 JPEG(.jpeg) 이미지를 선택하세요.</p>
+    </div>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "skt-aleph-t05",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "lint": "node scripts/static-check.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:t05": "node --test tests/t05/*.test.mjs",
+    "test:browser": "bash scripts/run-browser-tests.sh",
+    "build": "node scripts/build.mjs",
+    "check": "npm run lint && npm test && npm run test:t05 && npm run test:browser && npm run build"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "upstream_repository": "youngjinphys/SKT-ALEPH-T03",
+  "upstream_commit": "05e467b22f24b48a4a77a8321b3594f7e9f0642a",
+  "feature": "text-layer-z-order",
+  "common_time_limit_minutes": 60,
+  "common_request_limit": 6,
+  "request_unit": "one user-authored work request message",
+  "fixed_test_count": 10,
+  "fixed_test_manifest": "t05/fixed-tests.sha256",
+  "sequence": ["AI_A_START", "AI_A_END_HANDOFF", "AI_B_START", "AI_B_END"]
+}
