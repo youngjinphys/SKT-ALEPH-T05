@@ -26,3 +26,15 @@ export function moveLayerForward(doc, layerId) {
   ];
   return next;
 }
+
+export function moveLayerBackward(doc, layerId) {
+  const index = layerIndex(doc, layerId);
+  const next = cloneDocument(doc);
+  if (index <= 0) return next;
+
+  [next.textLayers[index - 1], next.textLayers[index]] = [
+    next.textLayers[index],
+    next.textLayers[index - 1],
+  ];
+  return next;
+}

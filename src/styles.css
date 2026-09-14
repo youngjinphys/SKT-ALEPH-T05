@@ -128,6 +128,7 @@ button:disabled { cursor: not-allowed; opacity: 0.46; transform: none; }
 .field-stack input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--border-strong); border-radius: 9px; background: #fff; padding: 4px; }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 .two-column-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#move-layer-backward, #move-layer-forward { width: 100%; }
 .layers-list { display: flex; flex-direction: column; gap: 6px; }
 .layer-button { width: 100%; text-align: left; background: var(--surface-muted); border: 1px solid transparent; border-radius: 9px; padding: 9px 10px; color: #475467; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .layer-button[aria-pressed="true"] { border-color: #9babee; background: #eef2ff; color: #2448c6; }

@@ -1,6 +1,7 @@
 import { createDocument, createTextLayer, getOutputSize, movePointByPixels } from './core/document.js';
 import { History } from './core/history.js';
 import { ImageInputError, prepareImageFile } from './core/image-processing.js';
+import { getLayerMoveState, moveLayerBackward, moveLayerForward } from './core/layer-order.js';
 import { renderDocumentToBlob } from './core/renderer.js';
 import { CanvasEditor } from './editor.js';
 
@@ -55,6 +56,8 @@ export class AppController {
       textFont: required(root, '#text-font'),
       textWeight: required(root, '#text-weight'),
       textAlign: required(root, '#text-align'),
+      moveBackward: required(root, '#move-layer-backward'),
+      moveForward: required(root, '#move-layer-forward'),
       deleteText: required(root, '#delete-text'),
       layersList: required(root, '#layers-list'),
       exportFormat: required(root, '#export-format'),
@@ -111,6 +114,8 @@ export class AppController {
 
     e.addText.addEventListener('click', () => this.addText());
     e.addTextSide.addEventListener('click', () => this.addText());
+    e.moveBackward.addEventListener('click', () => this.moveSelectedLayerBackward());
+    e.moveForward.addEventListener('click', () => this.moveSelectedLayerForward());
     e.deleteText.addEventListener('click', () => this.deleteSelectedText());
     e.undo.addEventListener('click', () => this.undo());
     e.redo.addEventListener('click', () => this.redo());
@@ -257,6 +262,16 @@ export class AppController {
     this.commitDocument(next);
   }
 
+  moveSelectedLayerBackward() {
+    if (!this.selectedId) return;
+    this.commitDocument(moveLayerBackward(this.doc, this.selectedId));
+  }
+
+  moveSelectedLayerForward() {
+    if (!this.selectedId) return;
+    this.commitDocument(moveLayerForward(this.doc, this.selectedId));
+  }
+
   updateSelectedText(patch, commit) {
     if (!this.selectedId) return;
     const next = clone(this.doc);
@@ -353,13 +368,20 @@ export class AppController {
   updateInspector() {
     const layer = this.doc.textLayers.find((item) => item.id === this.selectedId);
     this.elements.textInspector.hidden = !layer;
-    if (!layer) return;
+    if (!layer) {
+      this.elements.moveBackward.disabled = true;
+      this.elements.moveForward.disabled = true;
+      return;
+    }
     if (document.activeElement !== this.elements.textContent) this.elements.textContent.value = layer.text;
     this.elements.textColor.value = layer.color;
     this.elements.textSize.value = String(Math.round(layer.fontSize * 1080));
     this.elements.textFont.value = layer.fontFamily;
     this.elements.textWeight.value = String(layer.fontWeight);
     this.elements.textAlign.value = layer.textAlign;
+    const moveState = getLayerMoveState(this.doc, this.selectedId);
+    this.elements.moveBackward.disabled = !moveState.canMoveBackward;
+    this.elements.moveForward.disabled = !moveState.canMoveForward;
   }
 
   updateLayers() {
